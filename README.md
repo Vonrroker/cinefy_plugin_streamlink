@@ -4,7 +4,7 @@ Custom plugin for [Streamlink](https://streamlink.github.io/) with support for t
 
 ## Features
 
-- **Live Channels**: Supports channel URLs in the format `https://cinefy.gg/<channel>` and `https://cinefy.gg/<channel>/live`.
+- **Live Channels**: Supports channel URLs in the format `https://cinefy.gg/<channel_name>` and `https://cinefy.gg/<channel_name>/live`.
 - **Videos / VODs**: Direct support for on-demand videos with URLs such as `https://cinefy.gg/watch/<video_id>`.
 - **Latest VOD Fallback**: Optional `--cinefy-latest-vod` flag to automatically play the most recent recorded video if the channel is currently offline.
 - **Flexible Authentication**:
@@ -22,7 +22,7 @@ Custom plugin for [Streamlink](https://streamlink.github.io/) with support for t
 You can point Streamlink to the folder containing `cinefy.py` using the `--plugin-dirs` argument:
 
 ```powershell
-streamlink --plugin-dirs . https://cinefy.gg/minerva
+streamlink --plugin-dirs . https://cinefy.gg/<channel_name>
 ```
 
 ### Option 2: Install permanently in Streamlink
@@ -40,10 +40,24 @@ Once installed, passing `--plugin-dirs .` is no longer required.
 
 ## Authentication
 
-To access subscriber-only channels or content (such as `minerva`):
+To access subscriber-only channels or content, you need your Cinefy authentication Bearer token.
 
-1. **`.env` File (Automatic)**:
-   Place a `.env` file in the current working directory with:
+### How to Get Your Token
+
+1. Log in to your account at [https://cinefy.gg](https://cinefy.gg).
+2. Press **`F12`** (or right-click anywhere and select **Inspect**) to open Developer Tools.
+3. Switch to the **Network** tab.
+4. Refresh the page (**`F5`**) if no requests are listed.
+5. Click on any network request made to `cinefy.gg` or `api.cinefy.gg` (e.g. `@me`, channel, etc.).
+6. In the **Headers** tab under **Request Headers**, look for `Authorization: Bearer <token>`, **OR** in the **Cookies** / **Application** tab, look for the cookie named `token`.
+7. Copy the token value (the hex/alphanumeric string).
+
+---
+
+### Providing the Token to Streamlink
+
+1. **`.env` File (Automatic - Recommended)**:
+   Create a `.env` file in your workspace directory with:
    ```env
    bearer_token=YOUR_TOKEN_HERE
    ```
@@ -64,25 +78,25 @@ To access subscriber-only channels or content (such as `minerva`):
 
 ### 1. Watch or check a live channel:
 ```powershell
-streamlink --plugin-dirs . https://cinefy.gg/minerva best
+streamlink --plugin-dirs . https://cinefy.gg/<channel_name> best
 ```
 
 ### 2. Play the latest recorded video (VOD) if the channel is offline:
 ```powershell
-streamlink --plugin-dirs . https://cinefy.gg/minerva --cinefy-latest-vod best
+streamlink --plugin-dirs . https://cinefy.gg/<channel_name> --cinefy-latest-vod best
 ```
 
 ### 3. Watch a specific VOD / video directly:
 ```powershell
-streamlink --plugin-dirs . https://cinefy.gg/watch/cZOb3InQubpUL best
+streamlink --plugin-dirs . https://cinefy.gg/watch/<video_id> best
 ```
 
 ### 4. Open in VLC, MPV, or your preferred media player:
 ```powershell
-streamlink --plugin-dirs . https://cinefy.gg/watch/cZOb3InQubpUL best --player vlc
+streamlink --plugin-dirs . https://cinefy.gg/watch/<video_id> best --player vlc
 ```
 
 ### 5. Record/download the stream directly to a file:
 ```powershell
-streamlink --plugin-dirs . https://cinefy.gg/watch/cZOb3InQubpUL best -o "minerva_video.mp4"
+streamlink --plugin-dirs . https://cinefy.gg/watch/<video_id> best -o "video.mp4"
 ```
