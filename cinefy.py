@@ -68,6 +68,13 @@ class Cinefy(Plugin):
                 },
                 None,
             ),
+            validate.optional("catalogTitle"): validate.any(
+                {
+                    validate.optional("name"): validate.any(str, None),
+                    validate.optional("category"): validate.any(str, None),
+                },
+                None,
+            ),
             validate.optional("author"): validate.any(
                 {
                     validate.optional("id"): str,
@@ -86,6 +93,16 @@ class Cinefy(Plugin):
                     validate.optional("resolutions"): validate.any(list, None),
                     validate.optional("hasOriginal"): validate.any(bool, None),
                     validate.optional("hasMP4Fallback"): validate.any(bool, None),
+                },
+                None,
+            ),
+            validate.optional("playback"): validate.any(
+                {
+                    validate.optional("url"): validate.any(str, None),
+                    validate.optional("playbackUrl"): validate.any(str, None),
+                    validate.optional("baseUrl"): validate.any(str, None),
+                    validate.optional("authorization"): validate.any(str, None),
+                    validate.optional("streamId"): validate.any(str, None),
                 },
                 None,
             ),
@@ -212,11 +229,15 @@ class Cinefy(Plugin):
         if author := video_data.get("author"):
             self.author = author.get("displayName") or author.get("username")
 
-        if media := video_data.get("media"):
+        if catalog := video_data.get("catalogTitle"):
+            self.category = catalog.get("name")
+        elif media := video_data.get("media"):
             self.category = media.get("title") or media.get("originalTitle")
 
-        stream_info = video_data.get("stream")
-        if not stream_info:
+        stream_info = video_data.get("stream") or {}
+        playback_info = video_data.get("playback") or {}
+
+        if not stream_info and not playback_info:
             # Check if it's an external live stream embed
             if live_stream := video_data.get("liveStream"):
                 platform = live_stream.get("platform")
@@ -230,11 +251,16 @@ class Cinefy(Plugin):
                     return self.session.streams(f"https://twitch.tv/{username}")
             raise NoStreamsError
 
-        playback_url = stream_info.get("playbackUrl")
+        playback_url = (
+            playback_info.get("url")
+            or playback_info.get("playbackUrl")
+            or stream_info.get("playbackUrl")
+        )
+
         if not playback_url:
-            base_url = stream_info.get("baseUrl")
-            auth_param = stream_info.get("authorization") or ""
-            stream_id = stream_info.get("id")
+            base_url = playback_info.get("baseUrl") or stream_info.get("baseUrl")
+            auth_param = playback_info.get("authorization") or stream_info.get("authorization") or ""
+            stream_id = playback_info.get("streamId") or stream_info.get("id")
             if base_url and stream_id:
                 auth_part = f"{auth_param}/" if auth_param else ""
                 playback_url = f"{base_url}/{auth_part}{stream_id}/playlist.m3u8"
